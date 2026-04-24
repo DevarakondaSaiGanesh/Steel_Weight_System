@@ -1,0 +1,2 @@
+/ /login.html 302
+/api/* https://your-render-backend-url.com/api/:splat 200
