@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+<div id="nav-slot"></div>
+<main class="container-fluid py-4">
+  <a id="back" class="btn btn-link p-0 mb-2"><i class="bi bi-arrow-left"></i> Back to project</a>
+  <h2 id="pname" class="mb-1"></h2>
+  <p id="pdesc" class="text-muted"></p>
+  <div id="cards" class="row g-3 mb-4"></div>
+  <div class="row g-3">
+    <div class="col-lg-6"><div class="card shadow-sm h-100">
+      <div class="card-header bg-white"><strong>Weight by material</strong></div>
+      <div class="card-body"><canvas id="matChart" height="200"></canvas></div></div></div>
+    <div class="col-lg-6"><div class="card shadow-sm h-100">
+      <div class="card-header bg-white"><strong>Daily activity</strong></div>
+      <div class="card-body"><canvas id="timeChart" height="200"></canvas></div></div></div>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+const projectId = new URLSearchParams(location.search).get("id");
+(async () => {
+  const me = await mountNav("");
+  if (!me) return;
+  el("back").href = `/workspace.html?id=${projectId}`;
+  const d = await api(`/api/projects/${projectId}/dashboard`);
+  el("pname").textContent = d.project.name;
+  el("pdesc").textContent = d.project.description || "No description";
+  el("cards").innerHTML = `
+    <div class="col-sm-4"><div class="card shadow-sm h-100"><div class="card-body">
+      <div class="text-muted small">Total weight</div>
+      <div class="display-6">${(d.totalKg/1000).toFixed(2)} <small class="text-muted fs-6">t</small></div>
+      <div class="small text-muted">${d.totalKg.toLocaleString(undefined,{maximumFractionDigits:0})} kg</div>
+    </div></div></div>
+    <div class="col-sm-4"><div class="card shadow-sm h-100"><div class="card-body">
+      <div class="text-muted small">Entries</div><div class="display-6">${d.totalEntries}</div>
+    </div></div></div>
+    <div class="col-sm-4"><div class="card shadow-sm h-100"><div class="card-body">
+      <div class="text-muted small">Materials used</div><div class="display-6">${d.byMaterial.length}</div>
+    </div></div></div>`;
+  new Chart(el("matChart"), {
+    type: "bar",
+    data: { labels: d.byMaterial.map(m => m.material),
+      datasets: [{ label: "kg", data: d.byMaterial.map(m => m.weightKg), backgroundColor: "#0d6efd" }] },
+    options: { plugins: { legend: { display: false } } }
+  });
+  new Chart(el("timeChart"), {
+    type: "line",
+    data: { labels: d.timeline.map(t => t.date),
+      datasets: [{ label: "kg", data: d.timeline.map(t => t.weightKg),
+        borderColor: "#198754", backgroundColor: "rgba(25,135,84,0.15)", fill: true, tension: 0.3 }] }
+  });
+})();
+</script>
+</body>
+</html>

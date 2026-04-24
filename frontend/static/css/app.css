@@ -1,0 +1,5 @@
+body { min-height: 100vh; }
+.navbar-brand i { color: #ffc107; }
+.card { border: 0; }
+.display-6 { font-weight: 600; }
+table.table-sm td, table.table-sm th { padding: .5rem .6rem; }
